@@ -58,6 +58,14 @@ for diag, temp in temp_by_diag.items() :
 
 print(f"\n{'= ' * 50}")
 
+# ===== NOMBRE DE PATIENTS PAR SEXE ET DIAGNOSTIC =====
+print(f"\n--- Nombre de patients par sexe et diagnostic ---")
+
+sexe_diag_counts = df.groupby(["sexe", "diagnostic"]).size()
+
+for (sexe, diag), count in sexe_diag_counts.items():
+    print(f"Sexe: {sexe:6s} | Diagnostic: {diag:12s} : {count:3d} patients")
+
 print("Exploration terminee !")
 
 print("Prochain lab : entrainer un modele ML")
