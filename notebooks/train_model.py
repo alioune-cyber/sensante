@@ -160,9 +160,87 @@ le_sexe_loaded = joblib.load("models/encoder_sexe.pkl")
 
 le_region_loaded = joblib.load("models/encoder_region.pkl")
 
+
 print(f"Modele recharge : {type(model_loaded).__name__}")
 
 print(f"Classes : {list(model_loaded.classes_)}")
+
+
+print("\n==================================================================================================================")
+
+# === 3 nouveaux patients ===
+
+patients_test = [
+    # 1. Jeune sans symptômes
+    {
+        'nom': 'Jeune sain',
+        'age': 20,
+        'sexe': 'M',
+        'temperature': 36.7,
+        'tension_sys': 120,
+        'toux': False,
+        'fatigue': False,
+        'maux_tete': False,
+        'region': 'Dakar'
+    },
+
+    # 2. Adulte avec forte fièvre
+    {
+        'nom': 'Forte fievre',
+        'age': 35,
+        'sexe': 'F',
+        'temperature': 40.0,
+        'tension_sys': 115,
+        'toux': True,
+        'fatigue': True,
+        'maux_tete': True,
+        'region': 'Dakar'
+    },
+
+    # 3. Patient âgé avec toux
+    {
+        'nom': 'Age avec toux',
+        'age': 70,
+        'sexe': 'M',
+        'temperature': 37.8,
+        'tension_sys': 130,
+        'toux': True,
+        'fatigue': True,
+        'maux_tete': False,
+        'region': 'Dakar'
+    }
+]
+
+for patient in patients_test:
+    # Encoder
+    sexe_enc = le_sexe_loaded.transform([patient['sexe']])[0]
+    region_enc = le_region_loaded.transform([patient['region']])[0]
+
+    features = [
+        patient['age'],
+        sexe_enc,
+        patient['temperature'],
+        patient['tension_sys'],
+        int(patient['toux']),
+        int(patient['fatigue']),
+        int(patient['maux_tete']),
+        region_enc
+    ]
+
+    
+    features_df = pd.DataFrame([features], columns=feature_cols)
+
+    diagnostic = model_loaded.predict(features_df)[0]
+    probas = model_loaded.predict_proba(features_df)[0]
+    #probas = model_loaded.predict_proba([features])[0]
+    proba_max = probas.max()
+
+    print(f"\n--- {patient['nom']} ---")
+    print(f"Age: {patient['age']} | Sexe: {patient['sexe']}")
+    print(f"Diagnostic : {diagnostic}")
+    print(f"Confiance : {proba_max:.1%}")
+
+print("\n==================================================================================================================")
 
 
 # Un nouveau patient arrive au centre de sante de Medina
@@ -214,3 +292,12 @@ print(f"\nProbabilites par classe :")
 for classe, proba in zip(model_loaded.classes_, probas):
     bar = '#' * int(proba * 30)
     print(f" {classe:8s} : {proba:.1%} {bar}")
+
+
+
+
+
+
+importances = model.feature_importances_
+for name, imp in sorted(zip(feature_cols, importances), key=lambda x: x[1], reverse=True):
+    print(f" {name:20s} : {imp:.3f}")
