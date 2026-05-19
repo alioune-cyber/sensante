@@ -105,8 +105,17 @@
                     </div>
                 </div>
 
+                <div id="historique-section" class="mt-6 bg-white rounded-xl shadow-md p-4">
+                    <h3 class="font-bold text-gray-700 mb-3">Historique (5 dernières consultations)</h3>
+                    <div id="historique-list" class="space-y-2 text-sm text-gray-600">
+                        <p>Aucune consultation</p>
+                    </div>
+                </div>
+
+
             </div>
         </main>
+
         
         <!-- Footer-->
         <footer class="text-center text-gray-400 text-sm py-4">
@@ -117,6 +126,7 @@
         <script>
             // URL de l'API (a changer si l'API est ailleurs)
             const API_URL = "http://localhost:8000";
+            const historique = [];
             
             async function diagnostiquer() {
                 
@@ -190,26 +200,24 @@
             }
 
             function afficherResultat(r) {
-                // Codes couleur par diagnostic
-                const couleurs = {
-                
-                palu: {bg:"bg-red-100", text:"text-red-800",
-                bar: "bg-red-500", badge:"bg-red-500"},
-                
-                grippe: {bg:"bg-orange-100", text:"text-orange-800",
-                bar:"bg-orange-500", badge:"bg-orange-500"},
-                
-                typh: {bg:"bg-yellow-100", text:"text-yellow-800",
-                bar:"bg-yellow-500", badge:"bg-yellow-500"},
-                
-                sain: {bg:"bg-green-100", text:"text-green-800",
-                bar:"bg-green-500", badge:"bg-green-500"}
+                // Icônes par diagnostic
+                const icones = {
+                    palu: "🦟",
+                    grippe: "🤧",
+                    typh: "🧫",
+                    sain: "😎"
                 };
-                
+
+                const couleurs = {
+                    palu: {bg:"bg-red-100", text:"text-red-800", bar:"bg-red-500", badge:"bg-red-500"},
+                    grippe: {bg:"bg-orange-100", text:"text-orange-800", bar:"bg-orange-500", badge:"bg-orange-500"},
+                    typh: {bg:"bg-yellow-100", text:"text-yellow-800", bar:"bg-yellow-500", badge:"bg-yellow-500"},
+                    sain: {bg:"bg-green-100", text:"text-green-800", bar:"bg-green-500", badge:"bg-green-500"}
+                };
+
                 const c = couleurs[r.diagnostic] || couleurs["sain"];
-                
-                const pct = Math.round(r.probabilite * 100);
-                
+                const icon = icones[r.diagnostic] || "🩺";
+                const pct = Math.round(r.probabilite * 100);                
                 const section = document.getElementById("result-section");
                 
                 section.innerHTML = `
@@ -218,6 +226,7 @@
                         
                         <div class="${c.bg} rounded-lg p-4 mb-4">
                             <p class="text-sm text-gray-600">Diagnostic :</p>
+                            <p class="text-3xl mb-1">${icon}</p>
                             <p class="text-2xl font-bold ${c.text} uppercase mt-1">${r.diagnostic}</p>
                         </div>
                         
@@ -246,6 +255,41 @@
 
                     </div>
                 `;
+
+
+
+                // Ajouter dans l'historique
+                historique.unshift({
+                    nom: `Patient ${historique.length + 1}`,
+                    diagnostic: r.diagnostic,
+                    probabilite: Math.round(r.probabilite * 100)
+                });
+
+                // garder seulement 5
+                if (historique.length > 5) {
+                    historique.pop();
+                }
+
+                afficherHistorique();
+                demanderExplication(r);
+            }
+
+            function afficherHistorique() {
+
+                const container = document.getElementById("historique-list");
+
+                if (historique.length === 0) {
+                    container.innerHTML = "<p>Aucune consultation</p>";
+                    return;
+                }
+
+                container.innerHTML = historique.map(h => `
+                    <div class="flex justify-between border-b py-1">
+                        <span>${h.nom}</span>
+                        <span class="font-medium">${h.diagnostic}</span>
+                        <span class="text-blue-600">${h.probabilite}%</span>
+                    </div>
+                `).join("");
             }
 
             function afficherErreur(msg) {
@@ -257,22 +301,82 @@
                     </div>
                 `;
             }
+
+
+            async function demanderExplication(diagnostic_data) {
+
+                // Recuperer les donnees du formulaire
+                const explainData = {
+                    diagnostic: diagnostic_data.diagnostic,
+                    probabilite: diagnostic_data.probabilite,
+                    age: parseInt(document.getElementById("age").value),
+                    sexe: document.getElementById("sexe").value,
+                    temperature: parseFloat(document.getElementById("temperature").value),
+                    region: document.getElementById("region").value
+                };
+
+                // Zone d'explication dans le result-section
+                const section = document.getElementById("result-section");
+
+                // Creer le bloc explication
+                const explDiv = document.createElement("div");
+                explDiv.id = "explication-zone";
+
+                explDiv.innerHTML = `
+                    <div class="mt-4 bg-purple-50 rounded-lg p-4 border border-purple-200">
+                        <p class="text-sm text-purple-600 font-medium mb-2">
+                            Explication (Llama 3)
+                        </p>
+
+                        <p class="text-gray-500 text-sm animate-pulse">
+                            Generation en cours...
+                        </p>
+                    </div>
+                `;
+
+                // Ajouter correctement dans le bloc principal
+                const card = section.querySelector(".bg-white");
+                if (card) {
+                    card.appendChild(explDiv);
+                }
+
+                try {
+                    const response = await fetch(API_URL + "/explain", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(explainData)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("Erreur API /explain");
+                    }
+
+                    const result = await response.json();
+
+                    explDiv.innerHTML = `
+                        <div class="mt-4 bg-purple-50 rounded-lg p-4 border border-purple-200">
+                            <p class="text-sm text-purple-600 font-medium mb-2">
+                                Explication (Llama 3)
+                            </p>
+
+                            <p class="text-gray-700 text-sm leading-relaxed">
+                                ${result.explication}
+                            </p>
+                        </div>
+                    `;
+
+                } catch (error) {
+                    explDiv.innerHTML = `
+                        <div class="mt-4 bg-gray-50 rounded-lg p-3 border border-gray-200">
+                            <p class="text-gray-400 text-sm">
+                                Explication non disponible.
+                            </p>
+                        </div>
+                    `;
+                }
+            }
         </script>
     </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
