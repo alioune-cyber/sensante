@@ -16,6 +16,13 @@ from groq import Groq
 from pydantic import BaseModel, Field
 
 
+<<<<<<< HEAD
+=======
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+
+>>>>>>> d689d79 (Clean deployment without secrets)
 #---Schemas Pydantic--
 class PatientInput(BaseModel):
     age: int = Field(..., ge=0, le=120)
@@ -176,6 +183,33 @@ class ExplainOutput(BaseModel):
 
 
 
+<<<<<<< HEAD
+=======
+"""SYSTEM_PROMPT = (
+    "Tu es un assistant medical senegalais. "
+    "Tu recois un diagnostic et des donnees patient. "
+
+    "mais tu as le droit d'utiliser quelques mots français simples si tu ne trouves pas le mot wolof exact. "
+
+    "Mots wolof à utiliser absolument : "
+    "'dégg naa' (je comprends), 'wér na' (ça va / doucement), 'yaram' (corps / santé), "
+    "'fajkat' (médecin), 'jarama' (merci), 'ndax' (peut-être / parce que), "
+    "'baax na' (c'est bien / d'accord), 'tangoor' (fièvre), 'xare' (toux), "
+    "'bàyyi' (laisser / arrêter), 'jëmm' (le corps), 'fànni' (fatigué), "
+    "'tollu' (suffit / maximum), 'yore' (avoir / souffrir de). "
+
+    
+    "Explique le resultat en francais avec des mots wolofs simple, "
+    "comme un medecin parlerait a son patient. "
+    "Sois rassurant mais recommande toujours "
+    "une consultation medicale. "
+    "Maximum 3 phrases. "
+    "Ne fais JAMAIS de diagnostic toi-meme. "
+    "Tu expliques uniquement le diagnostic fourni."
+)"""
+
+
+>>>>>>> d689d79 (Clean deployment without secrets)
 SYSTEM_PROMPT = (
     "Tu es un assistant medical senegalais. "
     "Tu recois un diagnostic et des donnees patient. "
@@ -190,7 +224,10 @@ SYSTEM_PROMPT = (
 
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> d689d79 (Clean deployment without secrets)
 @app.post("/explain", response_model=ExplainOutput)
 def explain(data: ExplainInput):
     """
@@ -247,7 +284,10 @@ def explain(data: ExplainInput):
 
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> d689d79 (Clean deployment without secrets)
 # Autoriser les requetes depuis le frontend
 app.add_middleware(
     CORSMiddleware,
@@ -259,3 +299,19 @@ app.add_middleware(
 
 
 
+<<<<<<< HEAD
+=======
+
+
+
+
+# Servir le frontend comme fichier statique
+app.mount("/static", StaticFiles(directory="frontend"),name="static")
+
+@app.get("/")
+def serve_frontend():
+    """Servir la page d'accueil."""
+    return FileResponse("frontend/index.html")
+
+
+>>>>>>> d689d79 (Clean deployment without secrets)
