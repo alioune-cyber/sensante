@@ -58,9 +58,6 @@ print("=== Explication SenSante ===")
 print(response2.choices[0].message.content)
 
 
-<<<<<<< HEAD
-#print(f"\nTokens utilises : {response.usage.total_tokens}")
-=======
 #print(f"\nTokens utilises : {response.usage.total_tokens}")
 
 
@@ -98,4 +95,3 @@ response = client.chat.completions.create(
     max_tokens=200,
     temperature=0.3
 )
->>>>>>> d689d79 (Clean deployment without secrets)

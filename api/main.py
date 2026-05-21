@@ -16,13 +16,10 @@ from groq import Groq
 from pydantic import BaseModel, Field
 
 
-<<<<<<< HEAD
-=======
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 
->>>>>>> d689d79 (Clean deployment without secrets)
 #---Schemas Pydantic--
 class PatientInput(BaseModel):
     age: int = Field(..., ge=0, le=120)
@@ -48,7 +45,7 @@ app = FastAPI(
 )
 
 #---Chargement du modele (une seule fois)--
-print("Chargement du modele...")
+"""print("Chargement du modele...")
     
 model = joblib.load("models/model.pkl")
 le_sexe = joblib.load("models/encoder_sexe.pkl")
@@ -56,6 +53,52 @@ le_region = joblib.load("models/encoder_region.pkl")
 feature_cols = joblib.load("models/feature_cols.pkl")
     
 print(f"Modele charge : {list(model.classes_)}")
+"""
+
+
+
+#---Chargement du modele depuis Hugging Face Hub--
+from huggingface_hub import hf_hub_download
+
+print("Chargement du modele...")
+
+try:
+    # Télécharger les fichiers du repo modèle HF
+    model_path = hf_hub_download(
+        repo_id="cyberamn/sensante_model",
+        filename="model.pkl"
+    )
+
+    sexe_path = hf_hub_download(
+        repo_id="cyberamn/sensante_model",
+        filename="encoder_sexe.pkl"
+    )
+
+    region_path = hf_hub_download(
+        repo_id="cyberamn/sensante_model",
+        filename="encoder_region.pkl"
+    )
+
+    feature_cols_path = hf_hub_download(
+        repo_id="cyberamn/sensante_model",
+        filename="feature_cols.pkl"
+    )
+
+    # Charger les objets
+    model = joblib.load(model_path)
+    le_sexe = joblib.load(sexe_path)
+    le_region = joblib.load(region_path)
+    feature_cols = joblib.load(feature_cols_path)
+
+    print(f"Modele charge : {list(model.classes_)}")
+
+except Exception as e:
+    print(f"Erreur chargement modele : {e}")
+    raise e
+
+
+
+
 
 #---Routes--
 @app.get("/health")
@@ -183,8 +226,6 @@ class ExplainOutput(BaseModel):
 
 
 
-<<<<<<< HEAD
-=======
 """SYSTEM_PROMPT = (
     "Tu es un assistant medical senegalais. "
     "Tu recois un diagnostic et des donnees patient. "
@@ -209,7 +250,6 @@ class ExplainOutput(BaseModel):
 )"""
 
 
->>>>>>> d689d79 (Clean deployment without secrets)
 SYSTEM_PROMPT = (
     "Tu es un assistant medical senegalais. "
     "Tu recois un diagnostic et des donnees patient. "
@@ -224,10 +264,6 @@ SYSTEM_PROMPT = (
 
 
 
-<<<<<<< HEAD
-
-=======
->>>>>>> d689d79 (Clean deployment without secrets)
 @app.post("/explain", response_model=ExplainOutput)
 def explain(data: ExplainInput):
     """
@@ -284,10 +320,6 @@ def explain(data: ExplainInput):
 
 
 
-<<<<<<< HEAD
-
-=======
->>>>>>> d689d79 (Clean deployment without secrets)
 # Autoriser les requetes depuis le frontend
 app.add_middleware(
     CORSMiddleware,
@@ -299,8 +331,6 @@ app.add_middleware(
 
 
 
-<<<<<<< HEAD
-=======
 
 
 
@@ -314,4 +344,3 @@ def serve_frontend():
     return FileResponse("frontend/index.html")
 
 
->>>>>>> d689d79 (Clean deployment without secrets)
